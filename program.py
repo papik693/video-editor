@@ -23,97 +23,99 @@ class VideoEditorApp:
         self.root.geometry("700x500")
 
         # Create a Notebook
+        self.style = ttk.Style()
+        self.style.theme_use('default')
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill='both', expand=True)
 
-        # Create frames for tabs
-        self.tab1 = tk.Frame(self.notebook)
-        self.tab2 = tk.Frame(self.notebook)
-        self.tab3 = tk.Frame(self.notebook)
-        self.tab4 = tk.Frame(self.notebook)  
+        # Create frames for tabs with different background colors
+        self.tab1 = tk.Frame(self.notebook, bg='lightblue')
+        self.tab2 = tk.Frame(self.notebook, bg='lightblue')
+        self.tab3 = tk.Frame(self.notebook, bg='lightblue')
+        self.tab4 = tk.Frame(self.notebook, bg='lightblue')
 
         # Add tabs to the notebook
         self.notebook.add(self.tab1, text='Wyciągnij Audio')
         self.notebook.add(self.tab2, text='Przytnij Materiał')
         self.notebook.add(self.tab3, text='Zapętlij Materiał')
-        self.notebook.add(self.tab4, text='Połącz Pliki') 
+        self.notebook.add(self.tab4, text='Połącz Pliki')
 
         # Initialize variables
         self.filepath_tab1 = ""
         self.filepath_tab2 = ""
         self.filepath_tab3 = ""
-        self.filepath_tab4_1 = ""  
-        self.filepath_tab4_2 = ""  
+        self.filepath_tab4_1 = ""
+        self.filepath_tab4_2 = ""
 
         # Build the tabs
         self.extract_tab()
         self.cut_tab()
         self.loop_tab()
-        self.concat_tab()  
+        self.concat_tab()
 
     def extract_tab(self):
         # Widgets for the first tab (Extract Audio)
-        self.label1 = tk.Label(self.tab1, text="Wybierz plik")
+        self.label1 = tk.Label(self.tab1, text="Wybierz plik", bg='lightblue')
         self.label1.pack(pady=10)
 
         self.select_button1 = tk.Button(self.tab1, text="Wybierz plik", command=self.select_file_tab1)
         self.select_button1.pack(pady=10)
 
-        self.extract_audio_button = tk.Button(self.tab1, text="Wyciągnij audio z video", command=self.extract_audio)
+        self.extract_audio_button = tk.Button(self.tab1, text="Wyciągnij audio z video", command=self.extract_audio, bg='orange', fg='white')
         self.extract_audio_button.pack(pady=10)
 
     def cut_tab(self):
         # Widgets for the second tab (Cut Media)
-        self.label2 = tk.Label(self.tab2, text="Wybierz plik")
+        self.label2 = tk.Label(self.tab2, text="Wybierz plik", bg='lightblue')
         self.label2.pack(pady=10)
 
         self.select_button2 = tk.Button(self.tab2, text="Wybierz plik", command=self.select_file_tab2)
         self.select_button2.pack(pady=10)
 
-        self.start_time_label = tk.Label(self.tab2, text="Początek materiału w formacie HH:MM:SS")
+        self.start_time_label = tk.Label(self.tab2, text="Początek materiału w formacie HH:MM:SS", bg='lightblue')
         self.start_time_label.pack(pady=10)
         self.start_time_entry = tk.Entry(self.tab2)
         self.start_time_entry.pack(pady=5)
 
-        self.end_time_label = tk.Label(self.tab2, text="Koniec materiału w formacie HH:MM:SS")
+        self.end_time_label = tk.Label(self.tab2, text="Koniec materiału w formacie HH:MM:SS", bg='lightblue')
         self.end_time_label.pack(pady=10)
         self.end_time_entry = tk.Entry(self.tab2)
         self.end_time_entry.pack(pady=5)
 
-        self.cut_button = tk.Button(self.tab2, text="Przytnij materiał", command=self.cut_media)
+        self.cut_button = tk.Button(self.tab2, text="Przytnij materiał", command=self.cut_media, bg='orange', fg='white')
         self.cut_button.pack(pady=10)
 
     def loop_tab(self):
         # Widgets for the third tab (Loop Media)
-        self.label3 = tk.Label(self.tab3, text="Wybierz plik")
+        self.label3 = tk.Label(self.tab3, text="Wybierz plik", bg='lightblue')
         self.label3.pack(pady=10)
 
         self.select_button3 = tk.Button(self.tab3, text="Wybierz plik", command=self.select_file_tab3)
         self.select_button3.pack(pady=10)
 
-        self.duration_label = tk.Label(self.tab3, text="Docelowy czas trwania materiału w formacie HH:MM:SS")
+        self.duration_label = tk.Label(self.tab3, text="Docelowy czas trwania materiału w formacie HH:MM:SS", bg='lightblue')
         self.duration_label.pack(pady=10)
         self.duration_entry = tk.Entry(self.tab3)
         self.duration_entry.pack(pady=5)
 
-        self.loop_button = tk.Button(self.tab3, text="Zapętlij Materiał", command=self.loop_media)
+        self.loop_button = tk.Button(self.tab3, text="Zapętlij Materiał", command=self.loop_media, bg='orange', fg='white')
         self.loop_button.pack(pady=10)
 
     def concat_tab(self):
         # Widgets for the fourth tab (Concatenate Files)
-        self.label4 = tk.Label(self.tab4, text="Wybierz pierwszy plik")
+        self.label4 = tk.Label(self.tab4, text="Wybierz pierwszy plik", bg='lightblue')
         self.label4.pack(pady=10)
 
         self.select_button4_1 = tk.Button(self.tab4, text="Wybierz pierwszy plik", command=self.select_file_tab4_1)
         self.select_button4_1.pack(pady=10)
 
-        self.label4_2 = tk.Label(self.tab4, text="Wybierz drugi plik")
+        self.label4_2 = tk.Label(self.tab4, text="Wybierz drugi plik", bg='lightblue')
         self.label4_2.pack(pady=10)
 
         self.select_button4_2 = tk.Button(self.tab4, text="Wybierz drugi plik", command=self.select_file_tab4_2)
         self.select_button4_2.pack(pady=10)
 
-        self.concat_button = tk.Button(self.tab4, text="Połącz pliki", command=self.concat_media)
+        self.concat_button = tk.Button(self.tab4, text="Połącz pliki", command=self.concat_media, bg='orange', fg='white')
         self.concat_button.pack(pady=20)
 
     def select_file_tab1(self):
@@ -292,6 +294,7 @@ def loop_media(input_file, total_duration_str, output_file):
         .output(output_file, c=codec, t=total_duration_str, y=None)
         .run()
     )
+
 def concat_media(input_file1, input_file2, output_file):
     file_extension1 = os.path.splitext(input_file1)[1].lower()
     file_extension2 = os.path.splitext(input_file2)[1].lower()
@@ -318,7 +321,8 @@ def concat_media(input_file1, input_file2, output_file):
         )
     finally:
         # Remove the temporary file list
-        os.remove('file_list.txt')
+        if os.path.exists('file_list.txt'):
+            os.remove('file_list.txt')
 
 if __name__ == "__main__":
     ffmpeg_path = resource_path("ffmpeg.exe")
