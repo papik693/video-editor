@@ -20,7 +20,7 @@ class VideoEditorApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Simple Video Editor")
-        self.root.geometry("700x400")
+        self.root.geometry("700x500")
 
         # Create a Notebook
         self.notebook = ttk.Notebook(root)
@@ -29,22 +29,27 @@ class VideoEditorApp:
         # Create frames for tabs
         self.tab1 = tk.Frame(self.notebook)
         self.tab2 = tk.Frame(self.notebook)
-        self.tab3 = tk.Frame(self.notebook)  # New tab for looping
+        self.tab3 = tk.Frame(self.notebook)
+        self.tab4 = tk.Frame(self.notebook)  
 
         # Add tabs to the notebook
         self.notebook.add(self.tab1, text='Wyciągnij Audio')
         self.notebook.add(self.tab2, text='Przytnij Materiał')
-        self.notebook.add(self.tab3, text='Zapętlij Materiał')  # New tab
+        self.notebook.add(self.tab3, text='Zapętlij Materiał')
+        self.notebook.add(self.tab4, text='Połącz Pliki') 
 
         # Initialize variables
         self.filepath_tab1 = ""
         self.filepath_tab2 = ""
-        self.filepath_tab3 = ""  # For the new tab
+        self.filepath_tab3 = ""
+        self.filepath_tab4_1 = ""  
+        self.filepath_tab4_2 = ""  
 
         # Build the tabs
         self.extract_tab()
         self.cut_tab()
-        self.loop_tab()  # Build the new tab
+        self.loop_tab()
+        self.concat_tab()  
 
     def extract_tab(self):
         # Widgets for the first tab (Extract Audio)
@@ -94,6 +99,23 @@ class VideoEditorApp:
         self.loop_button = tk.Button(self.tab3, text="Zapętlij Materiał", command=self.loop_media)
         self.loop_button.pack(pady=10)
 
+    def concat_tab(self):
+        # Widgets for the fourth tab (Concatenate Files)
+        self.label4 = tk.Label(self.tab4, text="Wybierz pierwszy plik")
+        self.label4.pack(pady=10)
+
+        self.select_button4_1 = tk.Button(self.tab4, text="Wybierz pierwszy plik", command=self.select_file_tab4_1)
+        self.select_button4_1.pack(pady=10)
+
+        self.label4_2 = tk.Label(self.tab4, text="Wybierz drugi plik")
+        self.label4_2.pack(pady=10)
+
+        self.select_button4_2 = tk.Button(self.tab4, text="Wybierz drugi plik", command=self.select_file_tab4_2)
+        self.select_button4_2.pack(pady=10)
+
+        self.concat_button = tk.Button(self.tab4, text="Połącz pliki", command=self.concat_media)
+        self.concat_button.pack(pady=20)
+
     def select_file_tab1(self):
         self.filepath_tab1 = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
         self.label1.config(text=self.filepath_tab1)
@@ -105,6 +127,14 @@ class VideoEditorApp:
     def select_file_tab3(self):
         self.filepath_tab3 = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
         self.label3.config(text=self.filepath_tab3)
+
+    def select_file_tab4_1(self):
+        self.filepath_tab4_1 = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
+        self.label4.config(text=f"Pierwszy plik: {self.filepath_tab4_1}")
+
+    def select_file_tab4_2(self):
+        self.filepath_tab4_2 = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
+        self.label4_2.config(text=f"Drugi plik: {self.filepath_tab4_2}")
 
     def cut_media(self):
         if self.filepath_tab2:
@@ -143,6 +173,17 @@ class VideoEditorApp:
             if output_file:
                 self.show_processing_popup("Przetwarzam...")
                 threading.Thread(target=self.process_loop_media, args=(self.filepath_tab3, total_duration_str, output_file)).start()
+
+    def concat_media(self):
+        if self.filepath_tab4_1 and self.filepath_tab4_2:
+            file_extension = os.path.splitext(self.filepath_tab4_1)[1]
+            output_file = filedialog.asksaveasfilename(defaultextension=file_extension,
+                                                       filetypes=[("All files", "*.*")])
+            if output_file:
+                self.show_processing_popup("Łączenie plików...")
+                threading.Thread(target=self.process_concat_media, args=(self.filepath_tab4_1, self.filepath_tab4_2, output_file)).start()
+        else:
+            self.label4.config(text="Proszę wybrać oba pliki do połączenia.")
 
     def validate_time_format(self, time_str):
         # Simple validation for HH:MM:SS format
@@ -204,6 +245,15 @@ class VideoEditorApp:
         finally:
             self.processing_popup.destroy()
 
+    def process_concat_media(self, filepath1, filepath2, output_file):
+        try:
+            concat_media(filepath1, filepath2, output_file)
+            self.label4.config(text=f"Połączenie zakończone pomyślnie: {output_file}")
+        except Exception as e:
+            self.label4.config(text=f"Wystąpił błąd: {e}")
+        finally:
+            self.processing_popup.destroy()
+
 def cut_media(input_file, start_time, end_time, output_file):
     file_extension = os.path.splitext(input_file)[1].lower()
     if file_extension in ['.mp4', '.mkv', '.avi']:
@@ -242,6 +292,33 @@ def loop_media(input_file, total_duration_str, output_file):
         .output(output_file, c=codec, t=total_duration_str, y=None)
         .run()
     )
+def concat_media(input_file1, input_file2, output_file):
+    file_extension1 = os.path.splitext(input_file1)[1].lower()
+    file_extension2 = os.path.splitext(input_file2)[1].lower()
+
+    if file_extension1 != file_extension2:
+        raise ValueError("Pliki muszą być tego samego formatu.")
+
+    # Check if the file format is supported
+    if file_extension1 not in ['.mp4', '.mkv', '.ts', '.mp3', '.wav', '.aac']:
+        raise ValueError(f"Unsupported file format: {file_extension1}")
+
+    # Create a temporary file list for the concat demuxer
+    with open('file_list.txt', 'w', encoding='utf-8') as f:
+        f.write(f"file '{input_file1}'\n")
+        f.write(f"file '{input_file2}'\n")
+
+    try:
+        # Use FFmpeg concat demuxer
+        (
+            ffmpeg
+            .input('file_list.txt', format='concat', safe=0)
+            .output(output_file, c='copy', y=None)
+            .run()
+        )
+    finally:
+        # Remove the temporary file list
+        os.remove('file_list.txt')
 
 if __name__ == "__main__":
     ffmpeg_path = resource_path("ffmpeg.exe")
