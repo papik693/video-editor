@@ -2,6 +2,7 @@ import os
 import sys
 import tkinter as tk
 from tkinter import filedialog, Toplevel, Label
+from tkinter import ttk  # Import ttk for Notebook
 import ffmpeg
 import threading
 
@@ -21,53 +22,141 @@ class VideoEditorApp:
         self.root.title("Simple Video Editor")
         self.root.geometry("700x400")
 
-        self.filepath = ""
+        # Create a Notebook
+        self.notebook = ttk.Notebook(root)
+        self.notebook.pack(fill='both', expand=True)
 
-        self.label = tk.Label(root, text="Wybierz plik")
-        self.label.pack(pady=10)
+        # Create frames for tabs
+        self.tab1 = tk.Frame(self.notebook)
+        self.tab2 = tk.Frame(self.notebook)
+        self.tab3 = tk.Frame(self.notebook)  # New tab for looping
 
-        self.select_button = tk.Button(root, text="Wybierz plik", command=self.select_file)
-        self.select_button.pack(pady=10)
+        # Add tabs to the notebook
+        self.notebook.add(self.tab1, text='Wyciągnij Audio')
+        self.notebook.add(self.tab2, text='Przytnij Materiał')
+        self.notebook.add(self.tab3, text='Zapętlij Materiał')  # New tab
 
-        self.extract_audio_button = tk.Button(root, text="Wyciągnij audio z video", command=self.extract_audio)
+        # Initialize variables
+        self.filepath_tab1 = ""
+        self.filepath_tab2 = ""
+        self.filepath_tab3 = ""  # For the new tab
+
+        # Build the tabs
+        self.extract_tab()
+        self.cut_tab()
+        self.loop_tab()  # Build the new tab
+
+    def extract_tab(self):
+        # Widgets for the first tab (Extract Audio)
+        self.label1 = tk.Label(self.tab1, text="Wybierz plik")
+        self.label1.pack(pady=10)
+
+        self.select_button1 = tk.Button(self.tab1, text="Wybierz plik", command=self.select_file_tab1)
+        self.select_button1.pack(pady=10)
+
+        self.extract_audio_button = tk.Button(self.tab1, text="Wyciągnij audio z video", command=self.extract_audio)
         self.extract_audio_button.pack(pady=10)
 
-        self.start_time_label = tk.Label(root, text="Początek materiału w formacie HH:MM:SS")
+    def cut_tab(self):
+        # Widgets for the second tab (Cut Media)
+        self.label2 = tk.Label(self.tab2, text="Wybierz plik")
+        self.label2.pack(pady=10)
+
+        self.select_button2 = tk.Button(self.tab2, text="Wybierz plik", command=self.select_file_tab2)
+        self.select_button2.pack(pady=10)
+
+        self.start_time_label = tk.Label(self.tab2, text="Początek materiału w formacie HH:MM:SS")
         self.start_time_label.pack(pady=10)
-        self.start_time_entry = tk.Entry(root)
+        self.start_time_entry = tk.Entry(self.tab2)
         self.start_time_entry.pack(pady=5)
 
-        self.end_time_label = tk.Label(root, text="Koniec materiału w formacie HH:MM:SS")
+        self.end_time_label = tk.Label(self.tab2, text="Koniec materiału w formacie HH:MM:SS")
         self.end_time_label.pack(pady=10)
-        self.end_time_entry = tk.Entry(root)
+        self.end_time_entry = tk.Entry(self.tab2)
         self.end_time_entry.pack(pady=5)
 
-        self.cut_button = tk.Button(root, text="Przytnij materiał", command=self.cut_media)
+        self.cut_button = tk.Button(self.tab2, text="Przytnij materiał", command=self.cut_media)
         self.cut_button.pack(pady=10)
 
+    def loop_tab(self):
+        # Widgets for the third tab (Loop Media)
+        self.label3 = tk.Label(self.tab3, text="Wybierz plik")
+        self.label3.pack(pady=10)
 
-    def select_file(self):
-        self.filepath = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
-        self.label.config(text=self.filepath)
+        self.select_button3 = tk.Button(self.tab3, text="Wybierz plik", command=self.select_file_tab3)
+        self.select_button3.pack(pady=10)
+
+        self.duration_label = tk.Label(self.tab3, text="Docelowy czas trwania materiału w formacie HH:MM:SS")
+        self.duration_label.pack(pady=10)
+        self.duration_entry = tk.Entry(self.tab3)
+        self.duration_entry.pack(pady=5)
+
+        self.loop_button = tk.Button(self.tab3, text="Zapętlij Materiał", command=self.loop_media)
+        self.loop_button.pack(pady=10)
+
+    def select_file_tab1(self):
+        self.filepath_tab1 = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
+        self.label1.config(text=self.filepath_tab1)
+
+    def select_file_tab2(self):
+        self.filepath_tab2 = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
+        self.label2.config(text=self.filepath_tab2)
+
+    def select_file_tab3(self):
+        self.filepath_tab3 = filedialog.askopenfilename(filetypes=[("All files", "*.*")])
+        self.label3.config(text=self.filepath_tab3)
 
     def cut_media(self):
-        if self.filepath:
+        if self.filepath_tab2:
             start_time = self.start_time_entry.get()
             end_time = self.end_time_entry.get()
-            file_extension = os.path.splitext(self.filepath)[1]
+            file_extension = os.path.splitext(self.filepath_tab2)[1]
             output_file = filedialog.asksaveasfilename(defaultextension=file_extension,
                                                        filetypes=[("All files", "*.*")])
             if output_file:
                 self.show_processing_popup("Przetwarzam...")
-                threading.Thread(target=self.process_cut_media, args=(start_time, end_time, output_file)).start()
+                threading.Thread(target=self.process_cut_media, args=(self.filepath_tab2, start_time, end_time, output_file)).start()
 
     def extract_audio(self):
-        if self.filepath:
+        if self.filepath_tab1:
             output_file = filedialog.asksaveasfilename(defaultextension=".mp3",
                                                        filetypes=[("All files", "*.*")])
             if output_file:
-                self.show_processing_popup("Wyciagam audio...")
-                threading.Thread(target=self.process_extract_audio, args=(output_file,)).start()
+                self.show_processing_popup("Wyciągam audio...")
+                threading.Thread(target=self.process_extract_audio, args=(self.filepath_tab1, output_file)).start()
+
+    def loop_media(self):
+        if self.filepath_tab3:
+            total_duration_str = self.duration_entry.get()
+            if not total_duration_str:
+                self.label3.config(text="Proszę podać docelowy czas trwania.")
+                return
+
+            # Validate the total_duration_str
+            if not self.validate_time_format(total_duration_str):
+                self.label3.config(text="Nieprawidłowy format czasu. Użyj HH:MM:SS.")
+                return
+
+            file_extension = os.path.splitext(self.filepath_tab3)[1]
+            output_file = filedialog.asksaveasfilename(defaultextension=file_extension,
+                                                       filetypes=[("All files", "*.*")])
+            if output_file:
+                self.show_processing_popup("Przetwarzam...")
+                threading.Thread(target=self.process_loop_media, args=(self.filepath_tab3, total_duration_str, output_file)).start()
+
+    def validate_time_format(self, time_str):
+        # Simple validation for HH:MM:SS format
+        parts = time_str.strip().split(':')
+        if len(parts) != 3:
+            return False
+        try:
+            h, m, s = parts
+            int(h)
+            int(m)
+            float(s)
+            return True
+        except ValueError:
+            return False
 
     def show_processing_popup(self, message):
         self.processing_popup = Toplevel(self.root)
@@ -88,21 +177,30 @@ class VideoEditorApp:
 
         self.processing_popup.geometry(f"{popup_width}x{popup_height}+{popup_x}+{popup_y}")
 
-    def process_cut_media(self, start_time, end_time, output_file):
+    def process_cut_media(self, filepath, start_time, end_time, output_file):
         try:
-            cut_media(self.filepath, start_time, end_time, output_file)
-            self.label.config(text=f"Materiał przycięty!: {output_file}")
+            cut_media(filepath, start_time, end_time, output_file)
+            self.label2.config(text=f"Materiał przycięty!: {output_file}")
         except Exception as e:
-            self.label.config(text=f"Wystapil blad: {e}")
+            self.label2.config(text=f"Wystąpił błąd: {e}")
         finally:
             self.processing_popup.destroy()
 
-    def process_extract_audio(self, output_file):
+    def process_extract_audio(self, filepath, output_file):
         try:
-            extract_audio(self.filepath, output_file)
-            self.label.config(text=f"Wyciągnięcie audio zakończone pomyślnie: {output_file}")
+            extract_audio(filepath, output_file)
+            self.label1.config(text=f"Wyciągnięcie audio zakończone pomyślnie: {output_file}")
         except Exception as e:
-            self.label.config(text=f"Wystapil blad: {e}")
+            self.label1.config(text=f"Wystąpił błąd: {e}")
+        finally:
+            self.processing_popup.destroy()
+
+    def process_loop_media(self, filepath, total_duration_str, output_file):
+        try:
+            loop_media(filepath, total_duration_str, output_file)
+            self.label3.config(text=f"Zapętlanie zakończone pomyślnie: {output_file}")
+        except Exception as e:
+            self.label3.config(text=f"Wystąpił błąd: {e}")
         finally:
             self.processing_popup.destroy()
 
@@ -119,7 +217,7 @@ def cut_media(input_file, start_time, end_time, output_file):
         ffmpeg
         .input(input_file, ss=start_time, to=end_time)
         .output(output_file, c=codec, y=None)
-        .run()  # Suppress the output
+        .run()
     )
 
 def extract_audio(input_file, output_file):
@@ -127,7 +225,22 @@ def extract_audio(input_file, output_file):
         ffmpeg
         .input(input_file)
         .output(output_file, acodec='libmp3lame', y=None)
-        .run()  # Suppress the output
+        .run()
+    )
+
+def loop_media(input_file, total_duration_str, output_file):
+    # Use ffmpeg with -stream_loop -1 and -t total_duration_str
+    file_extension = os.path.splitext(input_file)[1].lower()
+    if file_extension in ['.mp4', '.mkv', '.avi', '.mp3', '.wav', '.aac']:
+        codec = 'copy'  # Copy streams
+    else:
+        raise ValueError(f"Unsupported file format: {file_extension}")
+
+    (
+        ffmpeg
+        .input(input_file, stream_loop=-1)
+        .output(output_file, c=codec, t=total_duration_str, y=None)
+        .run()
     )
 
 if __name__ == "__main__":
